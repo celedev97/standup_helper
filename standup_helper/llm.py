@@ -4,17 +4,42 @@ import re
 from openai import OpenAI
 
 
+_GENDER_FORMS = {
+    "f": "stata",
+    "m": "stato",
+}
+
+_GENDER_NAMES = {
+    "f": "femminile",
+    "m": "maschile",
+}
+
+
+def _gender_suffix() -> str:
+    raw = os.environ.get("USER_GENDER", "f").strip().lower()
+    return _GENDER_FORMS.get(raw, _GENDER_FORMS["f"])
+
+def _gender_name() -> str:
+    raw = os.environ.get("USER_GENDER", "m").strip().lower()
+    return _GENDER_NAMES.get(raw, _GENDER_NAMES["m"])
+
+
 def generate_standup(context: dict) -> str:
     client = OpenAI(
-        api_key=os.environ["GOOGLE_AI_STUDIO_API_KEY"],
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+        api_key=os.environ["LLM_API_KEY"],
+        base_url=os.environ.get(
+            "LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/"
+        ),
     )
 
-    system_prompt = """Sei un assistente che aiuta a preparare il testo per lo standup mattutino.
+    suffix = _gender_suffix()
+    gender_name = _gender_name()
+
+    system_prompt = f"""Sei un assistente che aiuta a preparare il testo per lo standup mattutino.
 
 Formato da seguire (adatta le sezioni in base ai dati disponibili):
 
-Ieri sono stata su <nome progetto abbreviato>.
+Ieri sono {suffix} su <nome progetto abbreviato>.
 Ho completato le storie riguardo a:
 - <descrizione storia, senza ID Jira>
 - ...
@@ -32,7 +57,7 @@ Ho ancora a metà alcune storie, tra cui:
 oggi conto di <cosa fare oggi, in base alle priorità: prima le storie rejected da sistemare, poi le storie in sospeso, poi eventualmente prenderne di nuove>.
 
 Regole:
-- Scrivi in prima persona femminile (sono stata, ho completato, ecc.)
+- Scrivi in prima persona al {gender_name} (sono {suffix}, ho completato, ecc.)
 - NON includere gli ID Jira nel testo finale
 - Per il nome del progetto usa la forma abbreviata e riconoscibile (es: "Waterjade" invece di "MobyGis - Waterjade Digital Twin / Board MGWD", o "APCUP" invece di "APCUP - Agenda CUP / Board APCUP")
 - Usa un tono naturale e colloquiale, come se lo dicessi a voce
@@ -48,7 +73,7 @@ PRIORITÀ DATI — fondamentale:
     user_message = _build_context_message(context)
 
     response = client.chat.completions.create(
-        model="gemma-4-31b-it",
+        model=os.environ.get("LLM_MODEL", "gemma-4-31b-it"),
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_message},
