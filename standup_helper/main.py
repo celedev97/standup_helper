@@ -23,6 +23,11 @@ def main():
         action="store_true",
         help="Mostra solo i dati raccolti senza chiamare l'LLM.",
     )
+    parser.add_argument(
+        "--stdout",
+        action="store_true",
+        help="Stampa solo il testo a terminale, senza salvare il file né aprire Notepad.",
+    )
     args = parser.parse_args()
 
     target_date: date | None = None
@@ -82,6 +87,9 @@ def main():
     print("=" * 50)
     print(text)
     print("=" * 50)
+
+    if args.stdout:
+        return
 
     output_dir = Path.home() / "Documents" / "Standup"
     output_dir.mkdir(parents=True, exist_ok=True)

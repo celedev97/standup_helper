@@ -5,6 +5,11 @@ yesterday's tracked time from [Toggl Track](https://toggl.com/track/) and
 cross-referencing it with issue status from Jira, then feeding it all to an
 LLM to produce a natural-sounding standup update.
 
+The intended use is to schedule it in a cron job (or Windows Task Scheduler)
+to run early in the morning, before the daily standup call. That way the
+recap text is already sitting in `~/Documents/Standup/` — ready to read from
+or copy-paste — the moment the call starts, with zero manual prep.
+
 ## How it works
 
 1. Fetches yesterday's (or a given date's) time entries from Toggl.
@@ -55,6 +60,8 @@ Options:
   the last working day.
 - `--dry-run` — print the raw collected data (Toggl + Jira) as JSON without
   calling the LLM.
+- `--stdout` — only print the generated standup text to the terminal;
+  skip saving it to a file and skip opening Notepad.
 
 ## Notes
 
